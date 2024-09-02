@@ -1,0 +1,9 @@
+# Ignorar la carpeta node_modules
+Nodes/
+venv/
+
+# Ignorar archivos de configuración de entorno
+.env
+
+# Ignorar archivos de compilación
+/dist
