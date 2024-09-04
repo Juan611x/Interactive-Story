@@ -4,8 +4,8 @@ import threading
 import time
 
 class Sound_Service:
-    def __init__(self, path):
-        self.set_Sound(path)
+    # def __init__(self, ):
+    #     self.set_Sound(path)
 
     def Start(self, *, gain = 1, position = (0,0,0), looping = False):
         self.Sound.set_looping = looping
@@ -14,6 +14,7 @@ class Sound_Service:
         self.Sound.play()
         while self.Sound.get_state() == AL_PLAYING:
             pass
+
 
     def Start_async(self, *, gain = 1, position = (0,0,0), sleep = 0, looping = False):
         time.sleep(sleep)

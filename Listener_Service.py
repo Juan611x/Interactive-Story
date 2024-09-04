@@ -21,6 +21,9 @@ class Listener_Service:
         alc.alcMakeContextCurrent(self.context)
         self.listener = oalGetListener()
 
+        self.listener.set_position((0, 0, 0))  # Posición del listener
+        self.listener.set_orientation((0, 0, -1, 0, 1, 0))
+
     def Stop(self):
         alc.alcMakeContextCurrent(None)
         alc.alcDestroyContext(self.context)

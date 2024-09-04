@@ -2,35 +2,24 @@ import os
 import time
 import random
 
+from Listener_Service import Listener_Service
+from Sound_Service import Sound_Service
+from Enemy import Enemy
+from Player import Player
+import Text_Service
+
 class Game:
-    def __init__(self):
+    def __init__(self, *, enemies, player):
+        self.listener = Listener_Service()
+        self.Audio_Source = Sound_Service()
+        
         self.location = 'entrance_hall'
-        self.inventory = []
         self.playing = True
         self.interactions = 0
         self.start_time = time.time()
-        self.health = 3
-        self.enemies_defeated = {
-            'armory': False,
-            'library': False,
-            'dungeon': False,
-            'throne_room': False,
-            'secret_chamber': False
-        }
-        self.enemies_discovered = {
-            'armory': False,
-            'library': False,
-            'dungeon': False,
-            'throne_room': False,
-            'secret_chamber': False
-        }
-        self.enemies = {
-            'armory': 'guardián de la armería',
-            'library': 'espectro de la biblioteca',
-            'dungeon': 'carcelero de la mazmorra',
-            'throne_room': 'rey espectral',
-            'secret_chamber': 'guardián de la reliquia'
-        }
+
+        self.enemies = enemies
+        self.player = player
 
     def clear(self):
         if os.name == 'nt':
@@ -38,7 +27,12 @@ class Game:
         else:
             os.system('clear')
 
+    def change_Room(self):
+        self.Audio_Source.set_Sound('closeDoor.wav')
+        self.Audio_Source.Start(gain=0.5)
+
     def play(self):
+
         print("¡Bienvenido al Castillo de las Sombras!")
         print("Tu misión es encontrar la legendaria reliquia oculta en lo más profundo del castillo.")
         print("Tienes un mapa antiguo que marca seis cuartos. Explora, resuelve enigmas y sobrevive.")
@@ -67,9 +61,11 @@ class Game:
             self.check_health()
 
     def entrance_hall(self):
+        self.change_Room()
         print("\nTe encuentras en el vestíbulo de entrada del castillo. La sala está llena de telarañas y el aire es frío.")
         print("Puedes ver puertas hacia el norte, este y oeste. Hay una escalera que desciende hacia el sur.")
-        action = input("¿Qué quieres hacer? (norte/este/oeste/sur/examinar): ").strip().lower()
+        # action = input("¿Qué quieres hacer? (norte/este/oeste/sur/examinar): ").strip().lower()
+        action =  Text_Service.Give_Options('¿Qué quieres hacer?', ['norte', 'este', 'oeste', 'sur', 'examinar'], player)
         self.interactions += 1
         if action == 'norte':
             self.location = 'throne_room'
@@ -86,21 +82,23 @@ class Game:
             print("No entiendes qué hacer.")
     
     def armory(self):
+        self.change_Room()
         # self.enemy_encounter('armory')
         print("\nHas entrado en la armería. Las paredes están cubiertas con armaduras oxidadas y espadas antiguas.")
-        action = input("¿Qué quieres hacer? (examinar/tomar/volver): ").strip().lower()
+        # action = input("¿Qué quieres hacer? (examinar/tomar/volver): ").strip().lower()
+        action = Text_Service.Give_Options('¿Qué quieres hacer', ['examinar', 'tomar', 'volver'], player)
         self.interactions += 1
         if action == 'examinar':
             print("Encuentras una espada que parece estar en mejor estado que las otras. También ves una linterna en un rincón.")
         elif action == 'tomar':
-            if 'sword' not in self.inventory:
+            if 'sword' not in self.player.inventory:
                 print("Tomas la espada. Ahora tienes una espada en tu inventario.")
-                self.inventory.append('sword')
+                self.player.inventory.append('sword')
             else:
                 print("Ya tienes la espada.")
-            if 'lantern' not in self.inventory:
+            if 'lantern' not in self.player.inventory:
                 print("Tomas la linterna. Ahora tienes una linterna en tu inventario.")
-                self.inventory.append('lantern')
+                self.player.inventory.append('lantern')
             else:
                 print("Ya tienes la linterna.")
         elif action == 'volver':
@@ -109,15 +107,17 @@ class Game:
             print("No entiendes qué hacer.")
     
     def library(self):
+        self.change_Room()
         self.enemy_encounter('library')
         print("\nEntras en una antigua biblioteca. Los estantes están llenos de libros polvorientos.")
         print("Una vela encendida sobre una mesa sugiere que alguien estuvo aquí recientemente.")
-        action = input("¿Qué quieres hacer? (examinar/libro_secreto/volver): ").strip().lower()
+        # action = input("¿Qué quieres hacer? (examinar/libro_secreto/volver): ").strip().lower()
+        action = Text_Service.Give_Options('¿Qué quieres hacer?', ['examinar', 'libro_secreto', 'volver'], player)
         self.interactions += 1
         if action == 'examinar':
             print("Mientras examinas los libros, encuentras un diario que describe los secretos del castillo.")
-            if 'diary' not in self.inventory:
-                self.inventory.append('diary')
+            if 'diary' not in self.player.inventory:
+                self.player.inventory.append('diary')
                 print("El diario se ha añadido a tu inventario.")
             else:
                 print("Ya has tomado el diario.")
@@ -131,20 +131,22 @@ class Game:
             print("No entiendes qué hacer.")
     
     def dungeon(self):
+        self.change_Room()
         self.enemy_encounter('dungeon')
         print("\nDesciendes a la mazmorra. Está oscura y húmeda, y puedes escuchar el eco de tu respiración.")
         print("Ves celdas vacías a ambos lados y una pesada puerta al final del pasillo.")
-        action = input("¿Qué quieres hacer? (explorar/abrir_puerta/volver): ").strip().lower()
+        # action = input("¿Qué quieres hacer? (explorar/abrir_puerta/volver): ").strip().lower()
+        action = Text_Service.Give_Options('¿Qué quieres hacer?', ['explorar', 'abrir_puerta', 'volver'], player)
         self.interactions += 1
         if action == 'explorar':
             print("Exploras las celdas y encuentras un esqueleto que sostiene una llave en la mano.")
-            if 'key' not in self.inventory:
-                self.inventory.append('key')
+            if 'key' not in self.player.inventory:
+                self.player.inventory.append('key')
                 print("Tomas la llave. Quizás abre alguna puerta importante.")
             else:
                 print("Ya has tomado la llave.")
         elif action == 'abrir_puerta':
-            if 'key' in self.inventory:
+            if 'key' in self.player.inventory:
                 print("Usas la llave para abrir la pesada puerta. Detrás de ella encuentras un túnel.")
                 print("Sigues el túnel y regresas al vestíbulo de entrada.")
                 self.location = 'entrance_hall'
@@ -156,16 +158,20 @@ class Game:
             print("No entiendes qué hacer.")
     
     def throne_room(self):
+        self.change_Room()
         self.enemy_encounter('throne_room')
         print("\nEntras en la sala del trono. Un gran trono dorado se encuentra al final de la sala.")
         print("Sin embargo, algo en el ambiente te pone nervioso. El lugar está lleno de una energía extraña.")
-        action = input("¿Qué quieres hacer? (examinar/sentar/volver): ").strip().lower()
+        # action = input("¿Qué quieres hacer? (examinar/sentar/volver): ").strip().lower()
+        action = Text_Service.Give_Options('¿Qué quieres hacer?', ['examinar', 'sentar', 'volver'], player)
         self.interactions += 1
         if action == 'examinar':
             print("Mientras examinas el trono, encuentras un compartimiento secreto.")
-            if 'ring' not in self.inventory:
+            if 'ring' not in self.player.inventory:
+                self.Audio_Source.set_Sound('logro.wav')
+                self.Audio_Source.Start()
                 print("Dentro del compartimiento encuentras un anillo dorado. Lo tomas y lo guardas.")
-                self.inventory.append('ring')
+                self.player.inventory.append('ring')
             else:
                 print("Ya has tomado el anillo.")
         elif action == 'sentar':
@@ -176,19 +182,21 @@ class Game:
             print("No entiendes qué hacer.")
     
     def secret_chamber(self):
+        self.change_Room()
         self.enemy_encounter('secret_chamber')
-        if all(self.enemies_defeated.values()):
+        if all(enemy.isDefeated for enemy in enemies.values()):
             print("\nTe encuentras en la cámara secreta. El aire es denso, y el ambiente parece cargado de misterio.")
             print("En el centro de la sala hay un pedestal con una reliquia antigua, brillando con una luz propia.")
-            action = input("¿Qué quieres hacer? (examinar/tomar/volver): ").strip().lower()
+            # action = input("¿Qué quieres hacer? (examinar/tomar/volver): ").strip().lower()
+            action = Text_Service.Give_Options('¿Qué quieres hacer?', ['examinar', 'tomar', 'volver'], player)
             self.interactions += 1
             if action == 'examinar':
                 print("Te acercas al pedestal y ves que la reliquia está rodeada de inscripciones antiguas.")
                 print("Parece ser la reliquia que buscabas, pero tomarla podría activar alguna trampa.")
             elif action == 'tomar':
-                if 'relic' not in self.inventory:
+                if 'relic' not in self.player.inventory:
                     print("Tomas la reliquia. Una sensación de logro te invade.")
-                    self.inventory.append('relic')
+                    self.player.inventory.append('relic')
                     self.location = 'end'
                 else:
                     print("Ya has tomado la reliquia.")
@@ -200,100 +208,69 @@ class Game:
             print("No puedes tomar la reliquia hasta derrotar a todos los enemigos en el castillo.")
             self.location = 'library'
 
-    # def enemy_encounter(self, room):
-    #     if not self.enemies_defeated[room]:
-    #         if 'lantern' in self.inventory:
-    #             action = input(f"Un {self.enemies[room]} aparece, pero tienes una linterna. ¿Qué haces? (atacar/huir): ").strip().lower()
-    #         else:
-    #             print(f"Un {self.enemies[room]} te embosca en la oscuridad.")
-    #             action = 'huir'  # Forzar al jugador a huir si no tiene linterna
-            
-    #         self.interactions += 1
-    #         if action == 'atacar' and 'sword' in self.inventory:
-    #             success = random.random() < 0.75
-    #             if success:
-    #                 print(f"¡Derrotaste al {self.enemies[room]}!")
-    #                 self.enemies_defeated[room] = True
-    #                 self.health = 100  # Recuperar salud al derrotar al enemigo
-    #             else:
-    #                 print(f"Fallaste al atacar y el {self.enemies[room]} te hiere.")
-    #                 self.health -= 40
-    #                 if self.health <= 0:
-    #                     print("Has sido derrotado.")
-    #                     self.playing = False
-    #         elif action == 'huir':
-    #             success = random.random() < 0.60
-    #             if success:
-    #                 print(f"Escapas del {self.enemies[room]}.")
-    #                 self.location = 'entrance_hall'
-    #             else:
-    #                 print(f"No lograste escapar y el {self.enemies[room]} te hiere.")
-    #                 self.health -= 30
-    #                 if self.health <= 0:
-    #                     print("Has sido derrotado.")
-    #                     self.playing = False
-    #         else:
-    #             print(f"El {self.enemies[room]} te ataca mientras dudas.")
-    #             self.health -= 50
-    #             if self.health <= 0:
-    #                 print("Has sido derrotado.")
-    #                 self.playing = False
-
     def enemy_encounter(self, room):
-        if not self.enemies_defeated[room]:
+        if not self.enemies[room].isDefeated:
             isCombat = True
             atack_p, Flee_p = 0.75, 0.6
-            if self.enemies_discovered[room] == False:
-                if 'lantern' in self.inventory:
-                    use = input('Deseas usar tu linterna ? (Si/No): ').strip().lower()
+            if self.enemies[room].isDiscovered == False:
+                if 'lantern' in self.player.inventory:
+                    # use = input('Deseas usar tu linterna ? (Si/No): ').strip().lower()
+                    use = Text_Service.Give_Options('Deseas usar tu linterna ?', ['Si', 'No'], player)
                     if use == 'si':
-                        print(f'Enemigo descubierto ({self.enemies[room]})')
-                        self.enemies_discovered[room] = True
+                        print(f'Enemigo descubierto ({self.enemies[room].name})')
+                        self.enemies[room].isDiscovered = True
                         print('Acabas de entrar en combate...')
             while isCombat:
                 self.check_health()
-                if self.health <= 0:
+                if self.player.health <= 0:
                     isCombat = False
                     continue
-                if self.enemies_discovered[room] == False:
-                    print(f'Aparecio el {self.enemies[room]}')
-                    print(f'El {self.enemies[room]} te ataco, te quito una vida')
-                    self.health -= 1
-                    self.enemies_discovered[room] = True
+                if self.enemies[room].isDiscovered == False:
+                    print(f'Aparecio el {self.enemies[room].name}')
+                    print(f'El {self.enemies[room].name} te ataco, te quito una vida')
+                    self.player.health -= 1
+                    self.enemies[room].isDiscovered = True
                 else:
-                    print(f'Estas en combate contra {self.enemies[room]}')
-                    action = input('Que deseas hacer ? (Atacar/Huir): ').strip().lower()
+                    print(f'Estas en combate contra {self.enemies[room].name}')
+                    # action = input('Que deseas hacer ? (Atacar/Huir): ').strip().lower()
+                    action = Text_Service.Give_Options('Que deseas hacer ?', ['Atacar', 'Huir'], player)
                     if action == 'atacar':
-                        if 'sword' in self.inventory:
+                        if 'sword' in self.player.inventory:
                             success = random.random() < atack_p
+                            self.Audio_Source.set_Sound('ataque.wav') 
+                            self.Audio_Source.Start(position=(1,0,0))
+                            time.sleep(0.2)    
                             if success:
-                                print(f'Derrotaste al {self.enemies[room]}')
-                                self.enemies_defeated[room] = True
+                                self.Audio_Source.set_Sound('golpeEspada.wav') 
+                                self.Audio_Source.Start(position=(-1,0,0))
+                                print(f'Derrotaste al {self.enemies[room].name}')
+                                self.enemies[room].isDefeated = True
                                 isCombat = False
-                                self.health = 3
+                                self.player.health = 3
                             else:
                                 print('Fallaste tu ataque!')
                                 print('El enemigo te ataca y pierdes una vida')
-                                self.health -= 1
+                                self.player.health -= 1
                         else:
                             print('No tiene con que atacar, reciver un ataque del enemigo y te quita una vida')
-                            self.health -= 1
+                            self.player.health -= 1
 
                     else:  
                         success = random.random() < Flee_p
                         if success:
-                            print(f'lograste huir del {self.enemies[room]}')
+                            print(f'lograste huir del {self.enemies[room].name}')
                             isCombat = False
                             #TODO: Huir
                             self.location = 'entrance_hall'
                         else:
                             print('No lograste Huir!')
                             print('El enemigo te ataca y pierdes una vida')
+                            self.player.health -= 1
 
 
 
     def check_health(self):
-        if self.health <= 0:
+        if self.player.health <= 0:
             print("Te has quedado sin salud.")
             self.playing = False
             self.end_game()
@@ -304,7 +281,19 @@ class Game:
         print("\nEl juego ha terminado.")
         print(f"Tuviste {self.interactions} interacciones y jugaste por {int(elapsed_time)} segundos.")
         print("Gracias por jugar.")
+        exit(0)
 
 
-game = Game()
+player = Player()
+player.inventory = []
+player.health = 3
+
+enemies = {
+            'armory': Enemy('guardián de la armería'),
+            'library': Enemy('espectro de la biblioteca'),
+            'dungeon': Enemy('carcelero de la mazmorra'),
+            'throne_room': Enemy('rey espectral'),
+            'secret_chamber': Enemy('guardián de la reliquia')
+        }
+game = Game(enemies=enemies, player=player)
 game.play()
