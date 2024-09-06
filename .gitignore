@@ -1,7 +1,6 @@
 # Ignorar la carpeta node_modules
 Nodes/
 venv/
-Sound_Efects/
 
 # Ignorar archivos de configuración de entorno
 .env
